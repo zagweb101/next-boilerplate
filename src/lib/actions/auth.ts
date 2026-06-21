@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { signIn } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { registerSchema } from "@/lib/validations/auth";
+import { sendWelcomeEmail } from "@/lib/actions/email";
 
 export type RegisterState = {
   error?: string;
@@ -39,6 +40,8 @@ export async function registerAction(
   await prisma.user.create({
     data: { name, email, password: hashedPassword },
   });
+
+  await sendWelcomeEmail({ to: email, name });
 
   await signIn("credentials", { email, password, redirect: false });
   redirect("/dashboard");

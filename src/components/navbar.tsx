@@ -20,9 +20,17 @@ export function Navbar() {
   return (
     <header className="border-b border-border bg-background">
       <nav className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
-        <Link href="/" className="text-lg font-semibold tracking-tight">
-          Next Boilerplate
-        </Link>
+        <div className="flex items-center gap-6">
+          <Link href="/" className="text-lg font-semibold tracking-tight">
+            Next Boilerplate
+          </Link>
+          <Link
+            href="/pricing"
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Pricing
+          </Link>
+        </div>
 
         <div className="flex items-center gap-2">
           <ThemeToggle />
@@ -61,10 +69,15 @@ export function Navbar() {
             </DropdownMenu>
           ) : (
             <div className="flex items-center gap-1">
-              <Button variant="ghost" size="sm" render={<Link href="/login" />}>
+              <Button
+                variant="ghost"
+                size="sm"
+                nativeButton={false}
+                render={<Link href="/login" />}
+              >
                 Login
               </Button>
-              <Button size="sm" render={<Link href="/register" />}>
+              <Button size="sm" nativeButton={false} render={<Link href="/register" />}>
                 Register
               </Button>
             </div>
