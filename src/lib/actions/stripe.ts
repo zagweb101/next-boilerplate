@@ -1,7 +1,7 @@
 "use server";
 
 import { auth } from "@/auth";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { redirect } from "next/navigation";
 
 export async function createCheckoutAction(priceId: string) {
@@ -10,6 +10,7 @@ export async function createCheckoutAction(priceId: string) {
     redirect("/login");
   }
 
+  const stripe = getStripe();
   const checkoutSession = await stripe.checkout.sessions.create({
     mode: "subscription",
     payment_method_types: ["card"],
@@ -37,6 +38,7 @@ export async function createPortalAction() {
     redirect("/pricing");
   }
 
+  const stripe = getStripe();
   const portalSession = await stripe.billingPortal.sessions.create({
     customer: subscription.stripeCustomerId,
     return_url: `${process.env.AUTH_URL ?? "http://localhost:3000"}/billing`,

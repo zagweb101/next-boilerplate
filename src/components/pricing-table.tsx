@@ -5,7 +5,7 @@ import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { createCheckoutAction } from "@/lib/actions/stripe";
-import { plans } from "@/lib/stripe";
+import { plans } from "@/lib/plans";
 
 export function PricingTable() {
   return (

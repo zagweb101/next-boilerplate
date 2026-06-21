@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { plans } from "@/lib/stripe";
+import { plans } from "@/lib/plans";
 import {
   Card,
   CardContent,
