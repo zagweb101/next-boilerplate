@@ -30,6 +30,12 @@ export function Navbar() {
           >
             Pricing
           </Link>
+          <Link
+            href="/blog"
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Blog
+          </Link>
         </div>
 
         <div className="flex items-center gap-2">
@@ -57,6 +63,12 @@ export function Navbar() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem render={<Link href="/dashboard" />}>
                   Dashboard
+                </DropdownMenuItem>
+                <DropdownMenuItem render={<Link href="/dashboard/settings" />}>
+                  Settings
+                </DropdownMenuItem>
+                <DropdownMenuItem render={<Link href="/billing" />}>
+                  Billing
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem

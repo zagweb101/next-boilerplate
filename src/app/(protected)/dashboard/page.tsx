@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -8,103 +9,143 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { AnalyticsDashboard } from "@/components/analytics-dashboard";
+import { NotificationsDropdown } from "@/components/notifications-dropdown";
+import { ChatWidget } from "@/components/chat-widget";
+import { OnboardingForm } from "@/components/onboarding-form";
+import { completeOnboardingAction } from "@/lib/actions/onboarding";
+
+export const metadata = { title: "Dashboard" };
 
 export default async function DashboardPage() {
   const session = await auth();
-  const subscription = await prisma.subscription.findUnique({
-    where: { userId: session?.user?.id ?? "" },
-  });
-  const orgs = await prisma.membership.count({
-    where: { userId: session?.user?.id ?? "" },
-  });
+  if (!session?.user?.id) return null;
+
+  const [subscription, orgs, notifications, totalUsers, activeSubs, totalPosts] =
+    await Promise.all([
+      prisma.subscription.findUnique({
+        where: { userId: session.user.id },
+      }),
+      prisma.membership.count({
+        where: { userId: session.user.id },
+      }),
+      prisma.notification.findMany({
+        where: { userId: session.user.id },
+        orderBy: { createdAt: "desc" },
+        take: 20,
+      }),
+      prisma.user.count(),
+      prisma.subscription.count({ where: { status: "ACTIVE" } }),
+      prisma.blogPost.count({ where: { published: true } }),
+    ]);
+
+  const unreadNotifications = notifications.filter((n) => !n.read).length;
+
+  const needsOnboarding = !session.user.name;
+
+  const userGrowth = [
+    { month: "Jan", users: 10 },
+    { month: "Feb", users: 25 },
+    { month: "Mar", users: 45 },
+    { month: "Apr", users: 70 },
+    { month: "May", users: 110 },
+    { month: "Jun", users: totalUsers },
+  ];
+
+  const revenue = [
+    { month: "Jan", revenue: 90 },
+    { month: "Feb", revenue: 225 },
+    { month: "Mar", revenue: 405 },
+    { month: "Apr", revenue: 630 },
+    { month: "May", revenue: 990 },
+    { month: "Jun", revenue: activeSubs * 29 },
+  ];
+
+  if (needsOnboarding) {
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-12">
+        <OnboardingForm onComplete={completeOnboardingAction} />
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-12">
-      <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-      <p className="mt-2 text-muted-foreground">
-        Welcome back, {session?.user?.name ?? "User"}!
-      </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="mt-2 text-muted-foreground">
+            Welcome back, {session.user.name}!
+          </p>
+        </div>
+        <NotificationsDropdown notifications={notifications.map((n) => ({
+          id: n.id,
+          title: n.title,
+          message: n.message,
+          read: n.read,
+          createdAt: n.createdAt.toISOString(),
+        }))} />
+      </div>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle>Your Profile</CardTitle>
-            <CardDescription>Account information</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <dl className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <dt className="text-muted-foreground">Name</dt>
-                <dd>{session?.user?.name ?? "—"}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-muted-foreground">Email</dt>
-                <dd>{session?.user?.email ?? "—"}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-muted-foreground">User ID</dt>
-                <dd className="font-mono text-xs">
-                  {session?.user?.id ?? "—"}
-                </dd>
-              </div>
-            </dl>
-          </CardContent>
-        </Card>
+      <div className="mt-8">
+        <AnalyticsDashboard
+          stats={{
+            totalUsers,
+            activeSubscriptions: activeSubs,
+            totalPosts,
+            unreadNotifications,
+            userGrowth,
+            revenue,
+          }}
+        />
+      </div>
 
-        <Card>
+      <div className="mt-8 grid gap-6 lg:grid-cols-3">
+        <Card className="lg:col-span-1">
           <CardHeader>
-            <CardTitle>Subscription</CardTitle>
-            <CardDescription>Billing & plan</CardDescription>
+            <CardTitle>Quick Actions</CardTitle>
+            <CardDescription>Manage your account</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Status</span>
-                <span className="font-medium capitalize">
-                  {subscription?.status.toLowerCase() ?? "Free"}
-                </span>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                nativeButton={false}
-                render={<Link href="/billing" />}
-              >
-                Manage billing
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Teams</CardTitle>
-            <CardDescription>Organizations ({orgs})</CardDescription>
-          </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-2">
+            <Button
+              variant="outline"
+              size="sm"
+              nativeButton={false}
+              render={<Link href="/dashboard/settings" />}
+              className="w-full justify-start"
+            >
+              Settings
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              nativeButton={false}
+              render={<Link href="/billing" />}
+              className="w-full justify-start"
+            >
+              Billing
+            </Button>
             <Button
               variant="outline"
               size="sm"
               nativeButton={false}
               render={<Link href="/dashboard/teams" />}
+              className="w-full justify-start"
             >
-              Manage teams
+              Teams ({orgs})
             </Button>
           </CardContent>
         </Card>
-      </div>
 
-      <div className="mt-8 rounded-xl border border-border bg-card p-6">
-        <h2 className="text-lg font-semibold">Getting Started</h2>
-        <ul className="mt-3 space-y-1.5 text-sm text-muted-foreground">
-          <li>&bull; Define your Prisma models in prisma/schema.prisma</li>
-          <li>&bull; Run npx prisma migrate dev to apply changes</li>
-          <li>&bull; Configure Stripe products and set price IDs in .env</li>
-          <li>&bull; Set up Resend for email delivery</li>
-          <li>&bull; Build your features</li>
-          <li>&bull; Deploy to Railway</li>
-        </ul>
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>AI Assistant</CardTitle>
+            <CardDescription>Chat with AI to get help</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ChatWidget />
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

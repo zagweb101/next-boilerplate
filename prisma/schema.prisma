@@ -21,6 +21,8 @@ model User {
   memberships   Membership[]
   subscription  Subscription?
   ownedOrgs     Organization[]
+  notifications Notification[]
+  posts         BlogPost[]
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 }
@@ -115,4 +117,33 @@ model Membership {
   createdAt       DateTime     @default(now())
 
   @@unique([userId, organizationId])
+}
+
+// ── Notifications ────────────────────────────────────────
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String   @db.Text
+  read      Boolean  @default(false)
+  type      String   @default("info")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+// ── Blog / CMS ───────────────────────────────────────────
+
+model BlogPost {
+  id          String    @id @default(cuid())
+  title       String
+  slug        String    @unique
+  excerpt     String    @db.Text
+  content     String    @db.Text
+  coverImage  String?
+  published   Boolean   @default(false)
+  authorId    String
+  author      User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
