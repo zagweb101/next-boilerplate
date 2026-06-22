@@ -65,19 +65,26 @@ export async function POST(req: Request) {
             plan: getPlanByPriceId(priceId ?? "")?.id,
           },
         });
+
+        await stripe.subscriptions.update(subscription.id, {
+          metadata: { userId },
+        });
         break;
       }
 
       case "customer.subscription.updated": {
         const subscription = event.data.object;
-        const userId = subscription.metadata?.userId;
-        if (!userId) break;
+
+        const dbSub = await prisma.subscription.findFirst({
+          where: { stripeSubscriptionId: subscription.id },
+        });
+        if (!dbSub) break;
 
         const priceId = subscription.items.data[0]?.price?.id;
         const periodEnd = subscription.items.data[0]?.current_period_end;
 
         await prisma.subscription.update({
-          where: { userId },
+          where: { userId: dbSub.userId },
           data: {
             stripePriceId: priceId,
             stripeCurrentPeriodEnd: periodEnd
@@ -92,11 +99,14 @@ export async function POST(req: Request) {
 
       case "customer.subscription.deleted": {
         const subscription = event.data.object;
-        const userId = subscription.metadata?.userId;
-        if (!userId) break;
+
+        const dbSub = await prisma.subscription.findFirst({
+          where: { stripeSubscriptionId: subscription.id },
+        });
+        if (!dbSub) break;
 
         await prisma.subscription.update({
-          where: { userId },
+          where: { userId: dbSub.userId },
           data: {
             status: "CANCELED",
             stripeSubscriptionId: null,
