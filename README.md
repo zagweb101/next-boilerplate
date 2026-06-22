@@ -2,6 +2,10 @@
 
 A production-ready Next.js boilerplate with everything you need to launch a SaaS — auth, billing, teams, emails, and deployment, all pre-configured.
 
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new)
+
+> **Buy a license:** [Single $79 / Unlimited $199 / Pro $299](https://github.com/zagweb101/next-boilerplate-sales)
+
 ## Stack
 
 | Layer | Technology |
